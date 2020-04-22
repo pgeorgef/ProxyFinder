@@ -8,11 +8,12 @@ class ProxyWebsite:
         self.url = url
         self.proxies = set()
 
-    def get_proxies(self):
+    def get_proxies(self, type_option):
         '''
         Get proxies from the proxy website 
-        Returns a list without duplicates of dictionaries with proxy hosts, ports and protocols
-            Example: [{'ip' : '109.167.113.9', 'port' : '59606', 'protocol' : 'Https'}, .....] 
+        Returns a list without duplicates of dictionaries with proxy hosts, ports and type
+            Example: [{'ip' : '109.167.113.9', 'port' : '59606', 'proxy_type' : 'Https'}, .....] 
+        type_option argument default value is all, it can be all, Http, or https
         '''
         r = requests.get( self.url )
         soup = BeautifulSoup ( r.text, 'html.parser' )
@@ -23,16 +24,26 @@ class ProxyWebsite:
                 if re.search( "\d+\.\d+\.\d+\.\d+" , str(td[0])) != None:  # check if a valid ip address was found
                     ip = td[ 0 ].text
                     port = td[ 1 ].text
-                    if td[ 6 ].text == 'yes':  # check if the protocol is Https or Http
-                        protocol = 'Https'
+                    if td[ 6 ].text == 'yes':  # check if the proxy type is Https or Http
+                        proxy_type = 'https'
                     else:
-                        protocol = 'Http'
+                        proxy_type = 'http'
                     proxies_dict = {
                         'ip' : ip,
                         'port' : port,
-                        'protocol' : protocol
                     }
-
+                    if type_option == 'all':
+                        proxies_dict['proxy_type'] = proxy_type
+                    elif type_option =='http':
+                        if proxy_type =='http':
+                            proxies_dict['proxy_type'] = proxy_type
+                        else:
+                            continue
+                    elif type_option =='https':
+                        if proxy_type =='https':
+                            proxies_dict['proxy_type'] = proxy_type
+                        else:
+                            continue                    
                     self.proxies.add( json.dumps(proxies_dict) ) # add the dict in the json format so it can be added in a set
 
                 else:
