@@ -1,5 +1,6 @@
 import requests
 import re
+import json
 from bs4 import BeautifulSoup
 
 class ProxyWebsite:
@@ -10,8 +11,8 @@ class ProxyWebsite:
     def get_proxies(self):
         '''
         Get proxies from the proxy website 
-        Returns a set of tuples with proxy hosts and ports
-            Example: [(192.168.0.1, 80), .....]
+        Returns a list without duplicates of dictionaries with proxy hosts, ports and protocols
+            Example: [{'ip' : '109.167.113.9', 'port' : '59606', 'protocol' : 'Https'}, .....] 
         '''
         r = requests.get( self.url )
         soup = BeautifulSoup ( r.text, 'html.parser' )
@@ -22,9 +23,23 @@ class ProxyWebsite:
                 if re.search( "\d+\.\d+\.\d+\.\d+" , str(td[0])) != None:  # check if a valid ip address was found
                     ip = td[ 0 ].text
                     port = td[ 1 ].text
-                    self.proxies.add( ( ip, port ) )
+                    if td[ 6 ].text == 'yes':  # check if the protocol is Https or Http
+                        protocol = 'Https'
+                    else:
+                        protocol = 'Http'
+                    proxies_dict = {
+                        'ip' : ip,
+                        'port' : port,
+                        'protocol' : protocol
+                    }
+
+                    self.proxies.add( json.dumps(proxies_dict) ) # add the dict in the json format so it can be added in a set
+
                 else:
                     break
+        self.proxies = list(self.proxies)
+        for i in range( len(self.proxies) ):
+            self.proxies[ i ] = json.loads( self.proxies[ i ] )  # convert the json back to a dict
         return self.proxies            
                 
 
@@ -34,4 +49,3 @@ Websites = [
     ProxyWebsite( url = 'https://us-proxy.org/'),
     ProxyWebsite( url = 'https://free-proxy-list.net/')
 ]
-
