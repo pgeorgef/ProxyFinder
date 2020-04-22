@@ -15,6 +15,7 @@ class ProxyWebsite:
             Example: [{'ip' : '109.167.113.9', 'port' : '59606', 'proxy_type' : 'Https'}, .....] 
         type_option argument default value is all, it can be all, Http, or https
         '''
+        self.proxies = set()
         r = requests.get( self.url )
         soup = BeautifulSoup ( r.text, 'html.parser' )
         rows = soup.find_all( 'tr' )
